@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vísitala neysluverðs – Reikna</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f4f6fb;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0d3b66 0%, #1e6091 100%);
+      color: #fff;
+      padding: 1.6rem 1.5rem 1.8rem;
+    }
+
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: rgba(255,255,255,.8);
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-bottom: 1rem;
+      transition: color .15s;
+    }
+    .back-link:hover { color: #fff; }
+
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+    }
+
+    header p {
+      margin-top: 0.35rem;
+      font-size: 0.97rem;
+      opacity: 0.82;
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 2.2rem auto 3rem;
+      padding: 0 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 1.6rem 1.8rem;
+    }
+
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #1e6091;
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Stat grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .stat {
+      background: #f4f6fb;
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: #666;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #0d3b66;
+      line-height: 1.15;
+    }
+
+    .stat-value.positive { color: #b83232; }
+    .stat-value.adjusted { color: #1a7a3e; }
+
+    .stat-sub {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 0.3rem;
+    }
+
+    /* ── Fee calculator ── */
+    .fee-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .fee-label {
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .fee-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .fee-input {
+      width: 130px;
+      padding: 0.5rem 0.7rem;
+      border: 1.5px solid #ccd;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: #1a1a2e;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .fee-input:focus { border-color: #1e6091; }
+
+    .fee-currency {
+      font-size: 0.92rem;
+      color: #555;
+    }
+
+    .fee-result {
+      margin-top: 1.1rem;
+      padding: 1rem 1.1rem;
+      background: #eaf5ee;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .fee-result-label { font-size: 0.9rem; color: #333; }
+
+    .fee-result-value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1a7a3e;
+    }
+
+    /* ── Chart ── */
+    .chart-wrap {
+      position: relative;
+      overflow-x: auto;
+    }
+
+    canvas#chart {
+      max-width: 100%;
+      height: 260px !important;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.55rem 0.8rem;
+      border-bottom: 1px solid #eef;
+    }
+
+    th {
+      background: #f4f6fb;
+      font-weight: 600;
+      color: #0d3b66;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: #f9fbfe; }
+
+    /* ── Status messages ── */
+    #status {
+      text-align: center;
+      padding: 2rem;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .error-msg {
+      background: #fff3f3;
+      border: 1px solid #f4c2c2;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      color: #b83232;
+      font-size: 0.9rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.4rem;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    footer a { color: #1e6091; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 22px; height: 22px;
+      border: 3px solid #dde;
+      border-top-color: #1e6091;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.5rem; }
+      .card { padding: 1.2rem 1.1rem; }
+      .stat-value { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="../" class="back-link">← Til baka</a>
+    <h1>Vísitala neysluverðs</h1>
+    <p>Gögn frá Hagstofu Íslands – uppfærð mánaðarlega</p>
+  </div>
+</header>
+
+<main id="main">
+  <div id="status"><span class="spinner"></span> Sæki gögn frá Hagstofu…</div>
+</main>
+
+<footer>
+  Heimild: <a href="https://www.hagstofa.is/" target="_blank" rel="noopener">Hagstofa Íslands</a>
+  &nbsp;·&nbsp;
+  &copy; <span id="yr"></span> Reikna
+  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────
+   Stillingar
+───────────────────────────────────────────── */
+// Viðmiðsdagsetning: 1. maí 2024 – mánaðargjald félags hófst þá
+const BASE_DATE   = '2024 M05';
+const BASE_FEE    = 10000;               // ISK
+const TABLE_URL   =
+  'https://px.hagstofa.is/pxis/api/v1/is/' +
+  'Efnahagur/visitolur/1_visitalaNeysluv/VIS01001.px';
+
+/* ─────────────────────────────────────────────
+   Hjálparföll
+───────────────────────────────────────────── */
+function fmtNum(n, decimals = 1) {
+  return n.toLocaleString('is-IS', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
+function fmtISK(n) {
+  return n.toLocaleString('is-IS', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }) + ' kr.';
+}
+
+/** "2024 M05"  →  "maí 2024" */
+function fmtMonth(code) {
+  const MONTHS = [
+    '', 'janúar','febrúar','mars','apríl','maí','júní',
+    'júlí','ágúst','september','október','nóvember','desember'
+  ];
+  const m = code.match(/(\d{4})\s*M(\d{2})/);
+  if (!m) return code;
+  return MONTHS[parseInt(m[2], 10)] + ' ' + m[1];
+}
+
+/** "2024 M05"  →  sortable number */
+function monthToNum(code) {
+  const m = code.match(/(\d{4})\s*M(\d{2})/);
+  return m ? parseInt(m[1]) * 100 + parseInt(m[2]) : 0;
+}
+
+/* ─────────────────────────────────────────────
+   Sækja gögn
+───────────────────────────────────────────── */
+async function fetchCPI() {
+  const body = JSON.stringify({ query: [], response: { format: 'json-stat2' } });
+  const res  = await fetch(TABLE_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+  if (!res.ok) throw new Error(`Netvillusvar: ${res.status}`);
+  return res.json();
+}
+
+/* ─────────────────────────────────────────────
+   Þátta json-stat2 svars
+───────────────────────────────────────────── */
+function parseCPI(data) {
+  /* Finna vídd með mánuðum (fyrsta vídd sem inniheldur "M") */
+  const dims   = data.id;   // array of dimension ids
+  const values = data.value;
+
+  /* Stærð hverrar víddar */
+  const sizes  = data.size; // e.g. [240, 1] if 240 months × 1 category
+
+  /* Finna hvaða vídd er mánuðurinn */
+  let monthDimIdx = -1;
+  for (let i = 0; i < dims.length; i++) {
+    const cats = Object.keys(data.dimension[dims[i]].category.index);
+    if (cats.some(c => /\d{4}\s*M\d{2}/.test(c))) {
+      monthDimIdx = i;
+      break;
+    }
+  }
+  if (monthDimIdx === -1) throw new Error('Fann ekki mánuðavídd í gögnum.');
+
+  const monthDim  = data.dimension[dims[monthDimIdx]];
+  const monthKeys = Object.keys(monthDim.category.index)
+    .sort((a, b) => monthToNum(a) - monthToNum(b));
+
+  /* Ef fleiri en ein vídd, þurfum við að finna rétta gildi */
+  /* Gerum ráð fyrir að visitalan sé í einni af viðunum – finnum
+     einföldustu lausnina: ef aðeins ein gildisvídd, nota gildi[i].
+     Annars: nota fyrsta 'flokk' í annarri vídd. */
+
+  function getValueAt(monthCode) {
+    const mIdx = monthDim.category.index[monthCode];
+    if (mIdx === undefined) return null;
+    /* Compute row-major stride for the month dimension.
+       For shape [s0, s1, ..., sN-1], stride[k] = product(sizes[k+1:]).
+       We take the first slice (index 0) for all non-month dimensions,
+       so flatIdx = mIdx * stride. */
+    let stride = 1;
+    for (let k = monthDimIdx + 1; k < sizes.length; k++) {
+      stride *= sizes[k];
+    }
+    return values[mIdx * stride];
+  }
+
+  const series = monthKeys.map(code => ({
+    code,
+    label: fmtMonth(code),
+    value: getValueAt(code)
+  })).filter(r => r.value !== null && r.value !== undefined);
+
+  return series;
+}
+
+/* ─────────────────────────────────────────────
+   Búa til HTML
+───────────────────────────────────────────── */
+function buildUI(series) {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  const latest  = series[series.length - 1];
+  const baseRec = series.find(r => r.code === BASE_DATE);
+
+  if (!baseRec) {
+    main.innerHTML = `<div class="error-msg">
+      Gat ekki fundið gögn fyrir ${fmtMonth(BASE_DATE)}.
+    </div>`;
+    return;
+  }
+
+  const growth   = ((latest.value - baseRec.value) / baseRec.value) * 100;
+  const adjFee   = (BASE_FEE * latest.value) / baseRec.value;
+
+  /* ── Yfirlitskort ── */
+  const statsCard = document.createElement('div');
+  statsCard.className = 'card';
+  statsCard.innerHTML = `
+    <div class="card-title">Yfirlit</div>
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-label">Núverandi vísitala</div>
+        <div class="stat-value">${fmtNum(latest.value, 1)}</div>
+        <div class="stat-sub">${latest.label}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Vísitala ${fmtMonth(BASE_DATE)}</div>
+        <div class="stat-value">${fmtNum(baseRec.value, 1)}</div>
+        <div class="stat-sub">Upphaf viðmiðs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Hækkun frá ${fmtMonth(BASE_DATE)}</div>
+        <div class="stat-value positive">+${fmtNum(growth, 2)}%</div>
+        <div class="stat-sub">${fmtNum(latest.value - baseRec.value, 1)} stig</div>
+      </div>
+    </div>
+  `;
+  main.appendChild(statsCard);
+
+  /* ── Gjaldareikningur ── */
+  const feeCard = document.createElement('div');
+  feeCard.className = 'card';
+  feeCard.innerHTML = `
+    <div class="card-title">Verðlagstengt mánaðargjald</div>
+    <div class="fee-row">
+      <div class="fee-label">Upphafsgjald (${fmtMonth(BASE_DATE)})</div>
+      <div class="fee-input-group">
+        <input id="feeInput" class="fee-input" type="number" min="0" value="${BASE_FEE}" />
+        <span class="fee-currency">ISK</span>
+      </div>
+    </div>
+    <div id="feeResult" class="fee-result">
+      <span class="fee-result-label">Núverandi gjald (${latest.label})</span>
+      <span id="feeValue" class="fee-result-value">${fmtISK(adjFee)}</span>
+    </div>
+  `;
+  main.appendChild(feeCard);
+
+  /* Gagnvirk uppfærsla á gjaldi */
+  const feeInput = document.getElementById('feeInput');
+  const feeValue = document.getElementById('feeValue');
+  feeInput.addEventListener('input', () => {
+    const base = parseFloat(feeInput.value) || 0;
+    const adj  = (base * latest.value) / baseRec.value;
+    feeValue.textContent = fmtISK(adj);
+  });
+
+  /* ── Línurit ── */
+  const chartCard = document.createElement('div');
+  chartCard.className = 'card';
+  chartCard.innerHTML = `
+    <div class="card-title">Þróun vísitölunnar (síðustu 5 ár)</div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  `;
+  main.appendChild(chartCard);
+
+  /* Sía síðustu 5 ár.
+     monthToNum gefur year*100 + month, svo að fara 5 ár aftur er að draga 500
+     (t.d. 202506 - 500 = 202006 = júní 2020). */
+  const cutoff = monthToNum(latest.code) - 500;
+  const recent = series.filter(r => monthToNum(r.code) >= cutoff);
+
+  drawChart(recent, baseRec.code);
+
+  /* ── Tafla (síðustu 24 mánuðir) ── */
+  const tableCard = document.createElement('div');
+  tableCard.className = 'card';
+  const last24 = series.slice(-24).reverse();
+  const rows = last24.map(r => {
+    const diff  = r.value - baseRec.value;
+    const pct   = ((r.value - baseRec.value) / baseRec.value) * 100;
+    const sign  = diff >= 0 ? '+' : '';
+    return `<tr>
+      <td>${r.label}</td>
+      <td>${fmtNum(r.value, 1)}</td>
+      <td style="color:${diff >= 0 ? '#b83232' : '#1a7a3e'}">${sign}${fmtNum(diff, 1)}</td>
+      <td style="color:${pct >= 0 ? '#b83232' : '#1a7a3e'}">${sign}${fmtNum(pct, 2)}%</td>
+    </tr>`;
+  }).join('');
+
+  tableCard.innerHTML = `
+    <div class="card-title">Síðustu 24 mánuðir</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mánuður</th>
+            <th>Vísitala</th>
+            <th>Breyting frá ${fmtMonth(BASE_DATE)}</th>
+            <th>% breyting</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+  main.appendChild(tableCard);
+}
+
+/* ─────────────────────────────────────────────
+   Einlægt línurit (án utanaðkomandi bókasafns)
+───────────────────────────────────────────── */
+function drawChart(series, highlightCode) {
+  const canvas = document.getElementById('chart');
+  if (!canvas) return;
+
+  const dpr    = window.devicePixelRatio || 1;
+  const W      = canvas.parentElement.clientWidth || 800;
+  const H      = 260;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top: 20, right: 20, bottom: 40, left: 55 };
+  const cW   = W - PAD.left - PAD.right;
+  const cH   = H - PAD.top  - PAD.bottom;
+
+  const vals = series.map(r => r.value);
+  const minV = Math.min(...vals) * 0.995;
+  const maxV = Math.max(...vals) * 1.005;
+
+  function xOf(i) { return PAD.left + (i / (series.length - 1)) * cW; }
+  function yOf(v) { return PAD.top  + cH - ((v - minV) / (maxV - minV)) * cH; }
+
+  /* Bakgrunnssvæði */
+  ctx.fillStyle = '#f4f6fb';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(PAD.left, PAD.top, cW, cH);
+
+  /* Láréttar hjálparlínur */
+  const ticks = 5;
+  ctx.strokeStyle = '#e8eaf0';
+  ctx.lineWidth = 1;
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= ticks; i++) {
+    const v = minV + ((maxV - minV) / ticks) * i;
+    const y = yOf(v);
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y);
+    ctx.lineTo(PAD.left + cW, y);
+    ctx.stroke();
+    ctx.fillText(fmtNum(v, 0), PAD.left - 6, y + 4);
+  }
+
+  /* Lóðréttar merkingar (ár) */
+  ctx.textAlign = 'center';
+  let lastYear = '';
+  series.forEach((r, i) => {
+    const yr = r.code.substring(0, 4);
+    if (yr !== lastYear) {
+      lastYear = yr;
+      const x = xOf(i);
+      ctx.strokeStyle = '#e0e3ec';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, PAD.top);
+      ctx.lineTo(x, PAD.top + cH);
+      ctx.stroke();
+      ctx.fillStyle = '#999';
+      ctx.fillText(yr, x, PAD.top + cH + 16);
+    }
+  });
+
+  /* Skuggi undir línu */
+  ctx.beginPath();
+  series.forEach((r, i) => {
+    const x = xOf(i), y = yOf(r.value);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(xOf(series.length - 1), PAD.top + cH);
+  ctx.lineTo(PAD.left, PAD.top + cH);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(30, 96, 145, 0.12)';
+  ctx.fill();
+
+  /* Aðallínan */
+  ctx.beginPath();
+  series.forEach((r, i) => {
+    const x = xOf(i), y = yOf(r.value);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#1e6091';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  /* Auðkenna viðmiðsmánuð */
+  const hIdx = series.findIndex(r => r.code === highlightCode);
+  if (hIdx >= 0) {
+    const hx = xOf(hIdx), hy = yOf(series[hIdx].value);
+    ctx.beginPath();
+    ctx.arc(hx, hy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#b83232';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  /* Auðkenna síðasta punkt */
+  const lx = xOf(series.length - 1), ly = yOf(vals[vals.length - 1]);
+  ctx.beginPath();
+  ctx.arc(lx, ly, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e6091';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+/* ─────────────────────────────────────────────
+   Ræsa forritið
+───────────────────────────────────────────── */
+(async () => {
+  try {
+    const raw    = await fetchCPI();
+    const series = parseCPI(raw);
+    if (!series.length) throw new Error('Engin gögn í svari frá Hagstofu.');
+    buildUI(series);
+  } catch (err) {
+    document.getElementById('main').innerHTML = `
+      <div class="error-msg">
+        <strong>Villa við að sækja gögn:</strong> ${err.message}<br/>
+        <small>Reyndu að endurhlaða síðuna. Ef vandinn varir, kann að vera um
+        tímabundna truflun á þjónustu Hagstofu að ræða.</small>
+      </div>`;
+  }
+})();
+</script>
+
+</body>
+</html>
