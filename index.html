@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reikna</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f4f6fb;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0d3b66 0%, #1e6091 100%);
+      color: #fff;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      font-size: 1.05rem;
+      opacity: 0.85;
+    }
+
+    main {
+      flex: 1;
+      max-width: 800px;
+      width: 100%;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      color: #0d3b66;
+      margin-bottom: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tools {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .tool-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 1.6rem 1.8rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.12);
+    }
+
+    .tool-icon {
+      font-size: 2.2rem;
+      flex-shrink: 0;
+    }
+
+    .tool-info h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .tool-info p {
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.45;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.82rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Reikna</h1>
+    <p>Gagnlegar reiknisíður</p>
+  </header>
+
+  <main>
+    <h2>Verkfæri</h2>
+    <div class="tools">
+      <a href="visitala/" class="tool-card">
+        <span class="tool-icon">📈</span>
+        <div class="tool-info">
+          <h3>Vísitala neysluverðs</h3>
+          <p>
+            Fylgstu með þróun vísitölu neysluverðs frá Hagstofu Íslands og
+            reiknaðu núvirði mánaðargjalds.
+          </p>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    &copy; <span id="yr"></span> Reikna
+    <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+  </footer>
+</body>
+</html>
