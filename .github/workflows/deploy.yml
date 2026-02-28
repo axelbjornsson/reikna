@@ -26,6 +26,8 @@ jobs:
 
       - name: Setja upp GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Hlaða upp Pages gögnum
         uses: actions/upload-pages-artifact@v3
