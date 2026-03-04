@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verðtryggt lán – Reikna</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f4f6fb;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0d3b66 0%, #1e6091 100%);
+      color: #fff;
+      padding: 1.6rem 1.5rem 1.8rem;
+    }
+
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: rgba(255,255,255,.8);
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-bottom: 1rem;
+      transition: color .15s;
+    }
+    .back-link:hover { color: #fff; }
+
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+    }
+
+    header p {
+      margin-top: 0.35rem;
+      font-size: 0.97rem;
+      opacity: 0.82;
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 2.2rem auto 3rem;
+      padding: 0 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 1.6rem 1.8rem;
+    }
+
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #1e6091;
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Input form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.1rem 1.4rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 0.35rem;
+    }
+
+    .form-field .field-hint {
+      font-size: 0.78rem;
+      color: #888;
+      font-weight: 400;
+      margin-left: 0.3rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid #ccd;
+      border-radius: 8px;
+      font-size: 0.97rem;
+      font-family: inherit;
+      color: #1a1a2e;
+      outline: none;
+      transition: border-color .15s;
+      background: #fff;
+    }
+
+    .form-input:focus { border-color: #1e6091; }
+
+    .input-with-suffix {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-with-suffix .form-input {
+      padding-right: 3rem;
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 0.75rem;
+      font-size: 0.88rem;
+      color: #777;
+      pointer-events: none;
+    }
+
+    /* ── Radio group ── */
+    .radio-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.15rem;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.92rem;
+      cursor: pointer;
+      padding: 0.45rem 0.9rem;
+      border: 1.5px solid #ccd;
+      border-radius: 8px;
+      transition: border-color .15s, background .15s;
+      user-select: none;
+    }
+
+    .radio-label input { display: none; }
+
+    .radio-label.selected {
+      border-color: #1e6091;
+      background: #eef5fb;
+      color: #0d3b66;
+      font-weight: 600;
+    }
+
+    /* ── Calc button ── */
+    .calc-btn {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #0d3b66 0%, #1e6091 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+
+    .calc-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .calc-btn:active { transform: translateY(0); }
+
+    /* ── Stat grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat {
+      background: #f4f6fb;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-value {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #0d3b66;
+      line-height: 1.2;
+    }
+
+    .stat-value.warn  { color: #b83232; }
+    .stat-value.good  { color: #1a7a3e; }
+
+    .stat-sub {
+      font-size: 0.76rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+
+    /* ── Chart ── */
+    .chart-wrap {
+      position: relative;
+      overflow-x: auto;
+    }
+
+    canvas#chart {
+      max-width: 100%;
+      height: 260px !important;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    th, td {
+      text-align: right;
+      padding: 0.5rem 0.7rem;
+      border-bottom: 1px solid #eef;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    th {
+      background: #f4f6fb;
+      font-weight: 600;
+      color: #0d3b66;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fbfe; }
+
+    .show-all-btn {
+      display: block;
+      margin: 1rem auto 0;
+      padding: 0.5rem 1.4rem;
+      background: transparent;
+      border: 1.5px solid #1e6091;
+      border-radius: 8px;
+      color: #1e6091;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+
+    .show-all-btn:hover {
+      background: #1e6091;
+      color: #fff;
+    }
+
+    /* ── Info note ── */
+    .info-note {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.4rem;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.5rem; }
+      .card { padding: 1.2rem 1.1rem; }
+      .stat-value { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="../" class="back-link">← Til baka</a>
+    <h1>Verðtryggt lán</h1>
+    <p>Reiknaðu mánaðarlegar greiðslur og heildargreiðslur verðtryggðs láns</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Lánsforsendur ── -->
+  <div class="card">
+    <div class="card-title">Lánsforsendur</div>
+    <div class="form-grid">
+
+      <div class="form-field">
+        <label for="loanAmount">Upphæð láns <span class="field-hint">(ISK)</span></label>
+        <div class="input-with-suffix">
+          <input id="loanAmount" class="form-input" type="number" min="1" step="100000" value="20000000" />
+          <span class="input-suffix">kr.</span>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="interestRate">Raunvextir á ári <span class="field-hint">(%)</span></label>
+        <div class="input-with-suffix">
+          <input id="interestRate" class="form-input" type="number" min="0" max="30" step="0.1" value="3.5" />
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="loanTerm">Lánstími <span class="field-hint">(ár)</span></label>
+        <div class="input-with-suffix">
+          <input id="loanTerm" class="form-input" type="number" min="1" max="50" step="1" value="25" />
+          <span class="input-suffix">ár</span>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="inflation">Áætluð verðbólga á ári <span class="field-hint">(%)</span></label>
+        <div class="input-with-suffix">
+          <input id="inflation" class="form-input" type="number" min="0" max="50" step="0.1" value="4" />
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+
+      <div class="form-field" style="grid-column: 1 / -1;">
+        <label>Greiðslumáti</label>
+        <div class="radio-group" id="paymentTypeGroup">
+          <label class="radio-label selected" data-value="annuity">
+            <input type="radio" name="paymentType" value="annuity" checked />
+            Jafnar greiðslur
+          </label>
+          <label class="radio-label" data-value="equal">
+            <input type="radio" name="paymentType" value="equal" />
+            Jöfn afborganir
+          </label>
+        </div>
+      </div>
+
+    </div>
+    <button class="calc-btn" id="calcBtn">Reikna lán</button>
+  </div>
+
+  <!-- ── Niðurstöður ── -->
+  <div class="card" id="summaryCard" style="display:none">
+    <div class="card-title">Niðurstöður</div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <p class="info-note" id="infoNote"></p>
+  </div>
+
+  <!-- ── Graf ── -->
+  <div class="card" id="chartCard" style="display:none">
+    <div class="card-title">Eftirstöðvar láns yfir tíma</div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  </div>
+
+  <!-- ── Afborgunaryfirlit ── -->
+  <div class="card" id="tableCard" style="display:none">
+    <div class="card-title">Afborgunaryfirlit</div>
+    <div class="table-wrap">
+      <table id="schedTable">
+        <thead>
+          <tr>
+            <th>Mánuður</th>
+            <th>Verðbætur</th>
+            <th>Vextir</th>
+            <th>Afborgun</th>
+            <th>Greiðsla</th>
+            <th>Eftirstöðvar</th>
+          </tr>
+        </thead>
+        <tbody id="schedBody"></tbody>
+      </table>
+    </div>
+    <button class="show-all-btn" id="showAllBtn">Sýna allar greiðslur</button>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Reikna
+  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────
+   Hjálparföll
+───────────────────────────────────────────── */
+function fmtISK(n) {
+  return Math.round(n).toLocaleString('is-IS') + ' kr.';
+}
+
+function fmtNum(n, dec) {
+  return n.toLocaleString('is-IS', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec
+  });
+}
+
+/* ─────────────────────────────────────────────
+   Radio group highlight
+───────────────────────────────────────────── */
+document.querySelectorAll('#paymentTypeGroup .radio-label').forEach(lbl => {
+  lbl.addEventListener('click', () => {
+    document.querySelectorAll('#paymentTypeGroup .radio-label')
+      .forEach(l => l.classList.remove('selected'));
+    lbl.classList.add('selected');
+    lbl.querySelector('input').checked = true;
+  });
+});
+
+/* ─────────────────────────────────────────────
+   Útreikningur
+───────────────────────────────────────────── */
+function calcLoan(principal, annualRate, termYears, type, annualInflation) {
+  const n               = termYears * 12;
+  const monthlyRate     = annualRate / 100 / 12;
+  const monthlyInflation = Math.pow(1 + annualInflation / 100, 1 / 12) - 1;
+
+  let balance  = principal;
+  let schedule = [];
+
+  if (type === 'annuity') {
+    /* Jafnar greiðslur: föst greiðsla í raungildi, hækkað með verðlagi */
+    const r = monthlyRate;
+    const realPayment = r > 0
+      ? principal * r / (1 - Math.pow(1 + r, -n))
+      : principal / n;
+
+    let cpiMult = 1;
+
+    for (let m = 1; m <= n; m++) {
+      /* 1. Verðbætur á eftirstöðvar */
+      const indexation = balance * monthlyInflation;
+      balance += indexation;
+      cpiMult  *= (1 + monthlyInflation);
+
+      /* 2. Vextir á verðbættar eftirstöðvar */
+      const interest = balance * r;
+
+      /* 3. Nafnleg greiðsla (hækkuð með verðlagi) */
+      const payment  = realPayment * cpiMult;
+
+      /* 4. Afborgun = greiðsla – vextir */
+      const principalPart = payment - interest;
+      balance -= principalPart;
+
+      /* Nákvæmnisvillu við lok */
+      if (m === n) balance = 0;
+
+      schedule.push({
+        month:       m,
+        indexation:  indexation,
+        interest:    interest,
+        principal:   principalPart,
+        payment:     payment,
+        balance:     Math.max(balance, 0)
+      });
+    }
+
+  } else {
+    /* Jöfn afborganir: föst raunleg afborgun, hækkuð með verðlagi */
+    const realInstallment = principal / n;
+    let cpiMult = 1;
+
+    for (let m = 1; m <= n; m++) {
+      const indexation = balance * monthlyInflation;
+      balance += indexation;
+      cpiMult  *= (1 + monthlyInflation);
+
+      const interest           = balance * monthlyRate;
+      const nominalInstallment = realInstallment * cpiMult;
+      const payment            = nominalInstallment + interest;
+      balance                 -= nominalInstallment;
+
+      if (m === n) balance = 0;
+
+      schedule.push({
+        month:       m,
+        indexation:  indexation,
+        interest:    interest,
+        principal:   nominalInstallment,
+        payment:     payment,
+        balance:     Math.max(balance, 0)
+      });
+    }
+  }
+
+  return schedule;
+}
+
+/* ─────────────────────────────────────────────
+   Línurit
+───────────────────────────────────────────── */
+function drawChart(schedule, principal) {
+  const canvas = document.getElementById('chart');
+  if (!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const W   = canvas.parentElement.clientWidth || 800;
+  const H   = 260;
+  canvas.width         = W * dpr;
+  canvas.height        = H * dpr;
+  canvas.style.width   = W + 'px';
+  canvas.style.height  = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top: 20, right: 20, bottom: 40, left: 70 };
+  const cW  = W - PAD.left - PAD.right;
+  const cH  = H - PAD.top  - PAD.bottom;
+
+  /* Sía til árs (eitt gildi á ár) */
+  const yearly = [];
+  yearly.push({ label: 'Upphaf', balance: principal });
+  for (let m = 11; m < schedule.length; m += 12) {
+    const yr = Math.round((m + 1) / 12);
+    yearly.push({ label: 'Ár ' + yr, balance: schedule[m].balance });
+  }
+
+  const balances = yearly.map(p => p.balance);
+  const maxV     = Math.max(...balances) * 1.02;
+  const minV     = 0;
+
+  function xOf(i) { return PAD.left + (i / (yearly.length - 1)) * cW; }
+  function yOf(v) { return PAD.top  + cH - (v / maxV) * cH; }
+
+  /* Bakgrunnur */
+  ctx.fillStyle = '#f4f6fb';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(PAD.left, PAD.top, cW, cH);
+
+  /* Láréttar hjálparlínur */
+  const ticks = 5;
+  ctx.font      = '11px system-ui, sans-serif';
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= ticks; i++) {
+    const v = (maxV / ticks) * i;
+    const y = yOf(v);
+    ctx.strokeStyle = '#e8eaf0';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y);
+    ctx.lineTo(PAD.left + cW, y);
+    ctx.stroke();
+    ctx.fillText(
+      (v / 1_000_000).toLocaleString('is-IS', { maximumFractionDigits: 0 }) + ' m.',
+      PAD.left - 6, y + 4
+    );
+  }
+
+  /* Lóðréttar hjálparlínur og ársmerkingarnar á x-ás */
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#999';
+  ctx.font      = '11px system-ui, sans-serif';
+  yearly.forEach((p, i) => {
+    const x = xOf(i);
+    if (i % Math.max(1, Math.floor(yearly.length / 8)) === 0 || i === yearly.length - 1) {
+      ctx.strokeStyle = '#e0e3ec';
+      ctx.lineWidth   = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, PAD.top);
+      ctx.lineTo(x, PAD.top + cH);
+      ctx.stroke();
+      ctx.fillStyle = '#999';
+      ctx.fillText(p.label, x, PAD.top + cH + 16);
+    }
+  });
+
+  /* Skuggi undir línu */
+  ctx.beginPath();
+  yearly.forEach((p, i) => {
+    const x = xOf(i), y = yOf(p.balance);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(xOf(yearly.length - 1), PAD.top + cH);
+  ctx.lineTo(PAD.left, PAD.top + cH);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(30, 96, 145, 0.12)';
+  ctx.fill();
+
+  /* Aðallínan */
+  ctx.beginPath();
+  yearly.forEach((p, i) => {
+    const x = xOf(i), y = yOf(p.balance);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#1e6091';
+  ctx.lineWidth   = 2.5;
+  ctx.lineJoin    = 'round';
+  ctx.stroke();
+
+  /* Upphafsgildi punkt */
+  ctx.beginPath();
+  ctx.arc(xOf(0), yOf(principal), 5, 0, Math.PI * 2);
+  ctx.fillStyle   = '#b83232';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+
+  /* Síðasti punktur */
+  ctx.beginPath();
+  ctx.arc(xOf(yearly.length - 1), yOf(0), 5, 0, Math.PI * 2);
+  ctx.fillStyle   = '#1e6091';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+}
+
+/* ─────────────────────────────────────────────
+   Birta niðurstöður
+───────────────────────────────────────────── */
+let fullSchedule = [];
+let showingAll   = false;
+
+function renderTable(all) {
+  const tbody = document.getElementById('schedBody');
+  tbody.innerHTML = '';
+  const rows = all ? fullSchedule : fullSchedule.slice(0, 24);
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.month}</td>
+      <td>${fmtISK(r.indexation)}</td>
+      <td>${fmtISK(r.interest)}</td>
+      <td>${fmtISK(r.principal)}</td>
+      <td><strong>${fmtISK(r.payment)}</strong></td>
+      <td>${fmtISK(r.balance)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const btn = document.getElementById('showAllBtn');
+  if (fullSchedule.length <= 24) {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = 'block';
+    btn.textContent = all
+      ? 'Sýna færri greiðslur'
+      : `Sýna allar ${fullSchedule.length} greiðslur`;
+  }
+}
+
+document.getElementById('showAllBtn').addEventListener('click', () => {
+  showingAll = !showingAll;
+  renderTable(showingAll);
+});
+
+function showResults(schedule, principal, type, annualInflation) {
+  const totalPaid       = schedule.reduce((s, r) => s + r.payment, 0);
+  const totalInterest   = schedule.reduce((s, r) => s + r.interest, 0);
+  const totalIndexation = schedule.reduce((s, r) => s + r.indexation, 0);
+  const firstPayment    = schedule[0].payment;
+  const lastPayment     = schedule[schedule.length - 1].payment;
+
+  const statsGrid = document.getElementById('statsGrid');
+  statsGrid.innerHTML = `
+    <div class="stat">
+      <div class="stat-label">Fyrsta greiðsla</div>
+      <div class="stat-value">${fmtISK(firstPayment)}</div>
+      <div class="stat-sub">Mánuður 1</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Síðasta greiðsla</div>
+      <div class="stat-value warn">${fmtISK(lastPayment)}</div>
+      <div class="stat-sub">Mánuður ${schedule.length}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Heildargreiðslur</div>
+      <div class="stat-value warn">${fmtISK(totalPaid)}</div>
+      <div class="stat-sub">${fmtNum(totalPaid / principal * 100, 0)}% af upphafsláni</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Heildar verðbætur</div>
+      <div class="stat-value warn">${fmtISK(totalIndexation)}</div>
+      <div class="stat-sub">Við ${annualInflation}% verðbólgu/ári</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Heildar vextir</div>
+      <div class="stat-value warn">${fmtISK(totalInterest)}</div>
+      <div class="stat-sub">Yfir ${schedule.length / 12} ár</div>
+    </div>
+  `;
+
+  const typeLabel = type === 'annuity' ? 'Jafnar greiðslur' : 'Jöfn afborganir';
+  document.getElementById('infoNote').textContent =
+    `Greiðslumáti: ${typeLabel}. ` +
+    `Verðbólguáætlun: ${annualInflation}% á ári. ` +
+    `Útreikningurinn er áætlun miðað við fasta verðlagsaukningu og getur verið frábrugðinn ` +
+    `raunverulegum greiðslum ef verðlag þróast á annan veg.`;
+
+  document.getElementById('summaryCard').style.display = '';
+  document.getElementById('chartCard').style.display   = '';
+  document.getElementById('tableCard').style.display   = '';
+
+  drawChart(schedule, principal);
+  renderTable(false);
+  showingAll = false;
+}
+
+/* ─────────────────────────────────────────────
+   Reikna takki
+───────────────────────────────────────────── */
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const principal   = parseFloat(document.getElementById('loanAmount').value)    || 0;
+  const annualRate  = parseFloat(document.getElementById('interestRate').value)  || 0;
+  const termYears   = parseInt  (document.getElementById('loanTerm').value, 10)  || 0;
+  const inflation   = parseFloat(document.getElementById('inflation').value)     || 0;
+  const type        = document.querySelector('#paymentTypeGroup .selected').dataset.value;
+
+  if (principal <= 0 || termYears <= 0 || annualRate < 0) {
+    alert('Vinsamlegast fylltu inn rétt gildi.');
+    return;
+  }
+
+  fullSchedule = calcLoan(principal, annualRate, termYears, type, inflation);
+  showResults(fullSchedule, principal, type, inflation);
+
+  document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+
+</body>
+</html>
